@@ -262,7 +262,7 @@ export function TransactionTable({ transactions }) {
             </div>
           )}
 
-          {(searchTerm || typeFilter || recurringFilter) && (
+           {(searchTerm || typeFilter || recurringFilter) && (
             <Button
               variant="outline"
               size="icon"

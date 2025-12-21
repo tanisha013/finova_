@@ -27,29 +27,28 @@ export default async function AccountPage({ params }) {
           </p>
         </div>
 
-        <div className="text-right pb-2">
-          <div className="text-xl sm:text-2xl font-bold">
-            ${parseFloat(account.balance).toFixed(2)}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {account._count.transactions} Transactions
-          </p>
+         <div className="text-right pb-2">
+           <div className="text-xl sm:text-2xl font-bold">
+             ${parseFloat(account.balance).toFixed(2)}
+           </div>
+           <p className="text-sm text-muted-foreground">
+             {account._count.transactions} Transactions
+           </p>
         </div>
-      </div>
+       </div>
 
-      {/* Chart Section */}
-      <Suspense
-        fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
-      >
-        <AccountChart transactions={transactions} />
-      </Suspense>
+       <Suspense
+         fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
+       >
+         <AccountChart transactions={transactions} />
+       </Suspense>
 
-      {/* Transactions Table */}
-      <Suspense
-        fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
-      >
-        <TransactionTable transactions={transactions} />
-      </Suspense>
-    </div>
-  );
-}
+       
+       <Suspense
+         fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
+       >
+         <TransactionTable transactions={transactions} />
+       </Suspense>
+     </div>
+   );
+ } 
