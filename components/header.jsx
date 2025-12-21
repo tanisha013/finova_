@@ -10,7 +10,7 @@ const Header = async () => {
   await checkUser();
   
   return (
-    <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b">
+    <header className="fixed top-0 w-full bg-white backdrop-blur-md z-50 border-b">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/">
           <Image
@@ -33,6 +33,9 @@ const Header = async () => {
               className="text-gray-600 hover:text-blue-600"
             >
               Testimonials
+            </a>
+            <a href="#about" className="text-gray-600 hover:text-blue-600">
+              About
             </a>
           </SignedOut>
         </div>
@@ -58,7 +61,8 @@ const Header = async () => {
           </SignedIn>
           <SignedOut>
             <SignInButton forceRedirectUrl="/dashboard">
-              <Button variant="outline">Login</Button>
+              <Button className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:scale-105 duration-300 ease-in-out
+              hover:from-indigo-700 hover:to-teal-700 transition-opacity shadow-lg shadow-indigo-600/30">Login</Button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
