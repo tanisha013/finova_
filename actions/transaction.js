@@ -3,8 +3,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import aj from "@/lib/arcjet";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { request } from "@arcjet/next";
 
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -254,7 +255,7 @@ export async function scanReceipt(file) {
         "category": "string"
       }
 
-      If its not a recipt, return an empty object
+      If its not a receipt, return an empty object
     `;
 
     const result = await model.generateContent([
@@ -271,7 +272,7 @@ export async function scanReceipt(file) {
     const text = response.text();
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
-    try {
+    try { 
       const data = JSON.parse(cleanedText);
       return {
         amount: parseFloat(data.amount),
