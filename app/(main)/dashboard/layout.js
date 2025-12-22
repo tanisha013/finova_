@@ -1,6 +1,7 @@
 import { BarLoader } from "react-spinners";
 import { Suspense } from "react";
 import DashboardPage from "./page";
+import { ChatbotFloatingButton } from "./_components/chatButton";
 
 export default function Layout() {
   return (
@@ -15,6 +16,7 @@ export default function Layout() {
       >
         <DashboardPage/>
       </Suspense>
+      <ChatbotFloatingButton/>
     </div>
   );
 }
