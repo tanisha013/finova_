@@ -9,17 +9,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  clerkUserId   String    @unique // clerk user id
-  email         String    @unique
+  id            String        @id @default(uuid())
+  clerkUserId   String        @unique
+  email         String        @unique
   name          String?
   imageUrl      String?
   transactions  Transaction[]
   accounts      Account[]
   budgets       Budget[]
+  chatMessages  ChatMessage[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-
+  
   @@map("users")
 }
 
@@ -76,6 +77,19 @@ model Budget {
 
   @@index([userId])
   @@map("budgets")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  userId    String   // References User.id (NOT clerkUserId)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   // 'user' or 'assistant'
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@map("chat_messages")
 }
 
 enum TransactionType {
