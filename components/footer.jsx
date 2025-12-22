@@ -1,7 +1,7 @@
 "use client"
 
 import Image from 'next/image';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Twitter, Linkedin, Github, Heart } from 'lucide-react';
 
 export function Footer() {
