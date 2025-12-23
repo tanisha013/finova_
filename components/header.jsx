@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "./ui/button";
 import { PenBox, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
@@ -11,8 +13,10 @@ import Image from "next/image";
 
 export default function Header() {
   return (
-    <header className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b">
+    <header className="fixed top-0 w-full bg-white backdrop-blur-md z-50 border-b">
       <nav className="container mx-auto px-3 py-4 flex items-center justify-between">
+        
+        {/* Logo */}
         <Link href="/">
           <Image
             src="/logo_final.png"
@@ -24,23 +28,31 @@ export default function Header() {
           />
         </Link>
 
-        {/* Public links */}
-        <div className="hidden md:flex items-center space-x-8">
-          <SignedOut>
-            <a href="#features" className="text-gray-600 hover:text-indigo-600">
+        {/* Center links (only when logged out) */}
+        <SignedOut>
+          <div className="hidden md:flex items-center space-x-8">
+            <Link href="#features" className="text-gray-600 hover:text-indigo-600">
               Features
-            </a>
-            <a href="#testimonials" className="text-gray-600 hover:text-indigo-600">
+            </Link>
+            <Link href="#testimonials" className="text-gray-600 hover:text-indigo-600">
               Testimonials
-            </a>
-            <a href="#about" className="text-gray-600 hover:text-indigo-600">
+            </Link>
+            <Link href="#about" className="text-gray-600 hover:text-indigo-600">
               About
-            </a>
-          </SignedOut>
-        </div>
+            </Link>
+          </div>
+        </SignedOut>
 
-        {/* Actions */}
-        <div className="flex items-center space-x-4">
+        {/* Right actions */}
+        <div className="flex items-center gap-4">
+          <SignedOut>
+            <SignInButton forceRedirectUrl="/dashboard">
+              <Button className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white shadow-lg">
+                Login
+              </Button>
+            </SignInButton>
+          </SignedOut>
+
           <SignedIn>
             <Link href="/dashboard">
               <Button variant="outline" className="flex items-center gap-2">
@@ -55,6 +67,7 @@ export default function Header() {
                 <span className="hidden md:inline">Add Transaction</span>
               </Button>
             </Link>
+
             <UserButton
               appearance={{
                 elements: {
@@ -63,14 +76,6 @@ export default function Header() {
               }}
             />
           </SignedIn>
-
-          <SignedOut>
-            <SignInButton forceRedirectUrl="/dashboard">
-              <Button className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white shadow-lg">
-                Login
-              </Button>
-            </SignInButton>
-          </SignedOut>
         </div>
       </nav>
     </header>
