@@ -6,6 +6,7 @@ import { TrustBadges } from "@/components/trustBadges";
 import { Features } from "@/components/features";
 import HowItWorksCard from "@/components/howItWorks";
 import { Testimonials } from "@/components/testimonials";
+import { Footer } from "@/components/footer";
 
 const LandingPage = () => {
   return (
@@ -17,6 +18,7 @@ const LandingPage = () => {
       <HowItWorksCard />
       <Testimonials />
       <CTA/>
+      <Footer />
     </div>
   );
 };

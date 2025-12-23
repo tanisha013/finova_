@@ -1,71 +1,60 @@
-import React from "react";
 import { Button } from "./ui/button";
 import { PenBox, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/nextjs";
 import Image from "next/image";
-import { checkUser } from "@/lib/checkUser";
 
-const Header = async () => {
-  await checkUser();
-  
+export default function Header() {
   return (
-    <header className="fixed top-0 w-full bg-white backdrop-blur-md z-50 border-b">
-      <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <header className="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b">
+      <nav className="container mx-auto px-3 py-4 flex items-center justify-between">
         <Link href="/">
           <Image
-            src={"/logo_final.png"}
-            alt="finova Logo"
+            src="/logo_final.png"
+            alt="Finova Logo"
             width={200}
             height={60}
             className="h-12 w-auto object-contain"
+            priority
           />
         </Link>
 
-        {/* Navigation Links - Different for signed in/out users */}
+        {/* Public links */}
         <div className="hidden md:flex items-center space-x-8">
           <SignedOut>
-            <a href="#features" className="text-gray-600 hover:text-blue-600">
+            <a href="#features" className="text-gray-600 hover:text-indigo-600">
               Features
             </a>
-            <a
-              href="#testimonials"
-              className="text-gray-600 hover:text-blue-600"
-            >
+            <a href="#testimonials" className="text-gray-600 hover:text-indigo-600">
               Testimonials
             </a>
-            <a href="#about" className="text-gray-600 hover:text-blue-600">
+            <a href="#about" className="text-gray-600 hover:text-indigo-600">
               About
             </a>
           </SignedOut>
         </div>
 
-        {/* Action Buttons */}
+        {/* Actions */}
         <div className="flex items-center space-x-4">
           <SignedIn>
-            <Link
-              href="/dashboard"
-              className="text-gray-600 hover:text-blue-600 flex items-center gap-2"
-            >
-              <Button variant="outline">
+            <Link href="/dashboard">
+              <Button variant="outline" className="flex items-center gap-2">
                 <LayoutDashboard size={18} />
                 <span className="hidden md:inline">Dashboard</span>
               </Button>
             </Link>
-            <a href="/transaction/create">
+
+            <Link href="/transaction/create">
               <Button className="flex items-center gap-2">
                 <PenBox size={18} />
                 <span className="hidden md:inline">Add Transaction</span>
               </Button>
-            </a>
-          </SignedIn>
-          <SignedOut>
-            <SignInButton forceRedirectUrl="/dashboard">
-              <Button className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-teal-600 text-white rounded-lg hover:scale-105 duration-300 ease-in-out
-              hover:from-indigo-700 hover:to-teal-700 transition-opacity shadow-lg shadow-indigo-600/30">Login</Button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
+            </Link>
             <UserButton
               appearance={{
                 elements: {
@@ -74,10 +63,16 @@ const Header = async () => {
               }}
             />
           </SignedIn>
+
+          <SignedOut>
+            <SignInButton forceRedirectUrl="/dashboard">
+              <Button className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white shadow-lg">
+                Login
+              </Button>
+            </SignInButton>
+          </SignedOut>
         </div>
       </nav>
     </header>
   );
-};
-
-export default Header;
+}
