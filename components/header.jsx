@@ -41,12 +41,6 @@ export default function Header() {
             <Link href="#about" className="text-gray-600 hover:text-indigo-600">
               About
             </Link>
-            <SignedOut>
-            <SignInButton forceRedirectUrl="/dashboard">
-              <Button className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white shadow-lg">
-                Login
-              </Button>
-            </SignInButton>
           </SignedOut>
           </div>
         </SignedOut>
