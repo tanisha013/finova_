@@ -30,13 +30,11 @@ export default function FinanceChatbot() {
 
   const scrollRef = useRef(null);
 
-  /* ---------------- LOAD DATA ---------------- */
   useEffect(() => {
     getChatHistory().then((h) => setMessages(h || []));
     getQuickInsights().then((r) => r?.success && setInsights(r.insights));
   }, []);
 
-  /* ---------------- AUTO SCROLL ---------------- */
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -46,7 +44,6 @@ export default function FinanceChatbot() {
     }
   }, [messages, isLoading]);
 
-  /* ---------------- SEND MESSAGE ---------------- */
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -76,7 +73,6 @@ export default function FinanceChatbot() {
     }
   };
 
-  /* ---------------- CLEAR CHAT ---------------- */
   const handleClear = async () => {
     if (!confirm('Clear chat history?')) return;
     await clearChatHistory();
@@ -86,8 +82,6 @@ export default function FinanceChatbot() {
 
   return (
     <Card className="h-[calc(100vh-5rem)] max-w-5xl mx-auto flex flex-col overflow-hidden shadow-xl">
-
-      {/* ================= HEADER (FIXED) ================= */}
       <CardHeader className="shrink-0 sticky top-0 z-20 bg-white/90 backdrop-blur border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -111,12 +105,9 @@ export default function FinanceChatbot() {
         </div>
       </CardHeader>
 
-      {/* ================= CHAT AREA (ONLY SCROLLS) ================= */}
       <div className="flex-1 overflow-hidden">
         <ScrollArea ref={scrollRef} className="h-full px-6 py-4">
           <div className="space-y-4">
-
-            {/* INSIGHTS */}
             {insights.length > 0 && (
               <Alert className="bg-gradient-to-r from-indigo-50 to-teal-50 border-indigo-100">
                 <Lightbulb className="h-4 w-4 text-indigo-600" />
@@ -128,7 +119,6 @@ export default function FinanceChatbot() {
               </Alert>
             )}
 
-            {/* EMPTY STATE */}
             {messages.length === 0 && !isLoading && (
               <div className="text-center py-20 text-gray-500">
                 <Bot className="w-12 h-12 mx-auto mb-2 opacity-70" />
@@ -138,12 +128,9 @@ export default function FinanceChatbot() {
               </div>
             )}
 
-            {/* MESSAGES */}
             {messages.map((msg, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
                 className={`flex gap-3 ${
                   msg.role === 'user' ? 'justify-end' : 'justify-start'
                 }`}
@@ -178,10 +165,9 @@ export default function FinanceChatbot() {
                     <User className="w-4 h-4 text-white" />
                   </div>
                 )}
-              </motion.div>
+              </div>
             ))}
 
-            {/* TYPING INDICATOR */}
             {isLoading && (
               <div className="flex gap-3 items-start">
                 <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -196,12 +182,10 @@ export default function FinanceChatbot() {
                 </div>
               </div>
             )}
-
           </div>
         </ScrollArea>
       </div>
 
-      {/* ================= INPUT (FIXED) ================= */}
       <div className="shrink-0 sticky bottom-0 z-20 bg-white/90 backdrop-blur border-t px-6 py-4">
         <div className="flex gap-2">
           <Input
