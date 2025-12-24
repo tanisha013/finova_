@@ -29,7 +29,7 @@ export default function Header() {
         </Link>
 
         {/* Center links (only when logged out) */}
-        <div suppressHydrationWarning>
+        <div></div>
         <SignedOut>
           <div className="hidden md:flex items-center space-x-8">
             <Link href="#features" className="text-gray-600 hover:text-indigo-600">
@@ -41,12 +41,18 @@ export default function Header() {
             <Link href="#about" className="text-gray-600 hover:text-indigo-600">
               About
             </Link>
-          </SignedOut>
           </div>
         </SignedOut>
 
         {/* Right actions */}
         <div className="flex items-center gap-4">
+          <SignedOut>
+            <SignInButton forceRedirectUrl="/dashboard">
+              <Button className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white shadow-lg">
+                Login
+              </Button>
+            </SignInButton>
+          </SignedOut>
 
           <SignedIn>
             <Link href="/dashboard">
@@ -71,7 +77,6 @@ export default function Header() {
               }}
             />
           </SignedIn>
-        </div>
         </div>
       </nav>
     </header>
