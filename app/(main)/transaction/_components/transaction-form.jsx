@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState, useCallback } from "react";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,14 +9,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Popover,
   PopoverContent,
@@ -28,8 +18,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
 import { cn } from "@/lib/utils";
 import { createTransaction, updateTransaction } from "@/actions/transaction";
-import { transactionSchema } from "@/app/lib/schema";
-import { ReceiptScanner } from "./recipt-scanner";
+import { ReceiptScanner } from "./receipt-scanner";
 
 export function AddTransactionForm({
   accounts,
@@ -41,39 +30,24 @@ export function AddTransactionForm({
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    watch,
-    setValue,
-    getValues,
-    reset,
-  } = useForm({
-    resolver: zodResolver(transactionSchema),
-    defaultValues:
-      editMode && initialData
-        ? {
-            type: initialData.type,
-            amount: initialData.amount.toString(),
-            description: initialData.description,
-            accountId: initialData.accountId,
-            category: initialData.category,
-            date: new Date(initialData.date),
-            isRecurring: initialData.isRecurring,
-            ...(initialData.recurringInterval && {
-              recurringInterval: initialData.recurringInterval,
-            }),
-          }
-        : {
-            type: "EXPENSE",
-            amount: "",
-            description: "",
-            accountId: accounts.find((ac) => ac.isDefault)?.id,
-            date: new Date(),
-            isRecurring: false,
-          },
-  });
+  // Form state
+  const [type, setType] = useState(editMode && initialData ? initialData.type : "EXPENSE");
+  const [amount, setAmount] = useState(editMode && initialData ? initialData.amount.toString() : "");
+  const [description, setDescription] = useState(editMode && initialData ? initialData.description : "");
+  const [accountId, setAccountId] = useState(
+    editMode && initialData
+      ? initialData.accountId
+      : accounts.find((ac) => ac.isDefault)?.id || ""
+  );
+  const [category, setCategory] = useState(editMode && initialData ? initialData.category : "");
+  const [date, setDate] = useState(editMode && initialData ? new Date(initialData.date) : new Date());
+  const [isRecurring, setIsRecurring] = useState(editMode && initialData ? initialData.isRecurring : false);
+  const [recurringInterval, setRecurringInterval] = useState(
+    editMode && initialData ? initialData.recurringInterval || "" : ""
+  );
+
+  // Errors
+  const [errors, setErrors] = useState({});
 
   const {
     loading: transactionLoading,
@@ -81,10 +55,37 @@ export function AddTransactionForm({
     data: transactionResult,
   } = useFetch(editMode ? updateTransaction : createTransaction);
 
-  const onSubmit = (data) => {
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!type) newErrors.type = "Type is required";
+    if (!amount || parseFloat(amount) <= 0) newErrors.amount = "Amount must be greater than 0";
+    if (!accountId) newErrors.accountId = "Account is required";
+    if (!category) newErrors.category = "Category is required";
+    if (!date) newErrors.date = "Date is required";
+    if (isRecurring && !recurringInterval) newErrors.recurringInterval = "Interval is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      toast.error("Please fix the errors");
+      return;
+    }
+
     const formData = {
-      ...data,
-      amount: parseFloat(data.amount),
+      type,
+      amount: parseFloat(amount),
+      description,
+      accountId,
+      category,
+      date,
+      isRecurring,
+      ...(isRecurring && { recurringInterval }),
     };
 
     if (editMode) {
@@ -94,19 +95,19 @@ export function AddTransactionForm({
     }
   };
 
-  const handleScanComplete = (scannedData) => {
+  const handleScanComplete = useCallback((scannedData) => {
     if (scannedData) {
-      setValue("amount", scannedData.amount.toString());
-      setValue("date", new Date(scannedData.date));
+      setAmount(scannedData.amount.toString());
+      setDate(new Date(scannedData.date));
       if (scannedData.description) {
-        setValue("description", scannedData.description);
+        setDescription(scannedData.description);
       }
       if (scannedData.category) {
-        setValue("category", scannedData.category);
+        setCategory(scannedData.category);
       }
       toast.success("Receipt scanned successfully");
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (transactionResult?.success && !transactionLoading) {
@@ -115,41 +116,39 @@ export function AddTransactionForm({
           ? "Transaction updated successfully"
           : "Transaction created successfully"
       );
-      reset();
       router.push(`/account/${transactionResult.data.accountId}`);
     }
-  }, [transactionResult, transactionLoading, editMode, reset, router]);
+  }, [transactionResult, transactionLoading, editMode, router]);
 
-  const type = watch("type");
-  const isRecurring = watch("isRecurring");
-  const date = watch("date");
+  const filteredCategories = categories.filter((cat) => cat.type === type);
 
-  const filteredCategories = categories.filter(
-    (category) => category.type === type
-  );
+  // Reset category when type changes
+  useEffect(() => {
+    if (category) {
+      const catExists = filteredCategories.find((cat) => cat.id === category);
+      if (!catExists) {
+        setCategory("");
+      }
+    }
+  }, [type, filteredCategories, category]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Receipt Scanner - Only show in create mode */}
+    <form onSubmit={handleSubmit} className="space-y-6" suppressHydrationWarning>
       {!editMode && <ReceiptScanner onScanComplete={handleScanComplete} />}
 
       {/* Type */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Type</label>
-        <Select
-          onValueChange={(value) => setValue("type", value)}
-          defaultValue={type}
+        <select
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          value={type}
+          onChange={(e) => setType(e.target.value)}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="EXPENSE">Expense</SelectItem>
-            <SelectItem value="INCOME">Income</SelectItem>
-          </SelectContent>
-        </Select>
+          <option value="EXPENSE">Expense</option>
+          <option value="INCOME">Income</option>
+        </select>
         {errors.type && (
-          <p className="text-sm text-red-500">{errors.type.message}</p>
+          <p className="text-sm text-red-500">{errors.type}</p>
         )}
       </div>
 
@@ -161,40 +160,37 @@ export function AddTransactionForm({
             type="number"
             step="0.01"
             placeholder="0.00"
-            {...register("amount")}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
           />
           {errors.amount && (
-            <p className="text-sm text-red-500">{errors.amount.message}</p>
+            <p className="text-sm text-red-500">{errors.amount}</p>
           )}
         </div>
 
         <div className="space-y-2">
           <label className="text-sm font-medium">Account</label>
-          <Select
-            onValueChange={(value) => setValue("accountId", value)}
-            defaultValue={getValues("accountId")}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select account" />
-            </SelectTrigger>
-            <SelectContent>
+          <div className="space-y-2">
+            <select
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              value={accountId}
+              onChange={(e) => setAccountId(e.target.value)}
+            >
+              <option value="">Select account</option>
               {accounts.map((account) => (
-                <SelectItem key={account.id} value={account.id}>
-                  {account.name} (${parseFloat(account.balance).toFixed(2)})
-                </SelectItem>
+                <option key={account.id} value={account.id}>
+                  {account.name} (₹{parseFloat(account.balance).toFixed(2)})
+                </option>
               ))}
-              <CreateAccountDrawer>
-                <Button
-                  variant="ghost"
-                  className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
-                >
-                  Create Account
-                </Button>
-              </CreateAccountDrawer>
-            </SelectContent>
-          </Select>
+            </select>
+            <CreateAccountDrawer>
+              <Button type="button" variant="outline" size="sm" className="w-full">
+                + Create New Account
+              </Button>
+            </CreateAccountDrawer>
+          </div>
           {errors.accountId && (
-            <p className="text-sm text-red-500">{errors.accountId.message}</p>
+            <p className="text-sm text-red-500">{errors.accountId}</p>
           )}
         </div>
       </div>
@@ -202,23 +198,20 @@ export function AddTransactionForm({
       {/* Category */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Category</label>
-        <Select
-          onValueChange={(value) => setValue("category", value)}
-          defaultValue={getValues("category")}
+        <select
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            {filteredCategories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="">Select category</option>
+          {filteredCategories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
         {errors.category && (
-          <p className="text-sm text-red-500">{errors.category.message}</p>
+          <p className="text-sm text-red-500">{errors.category}</p>
         )}
       </div>
 
@@ -228,6 +221,7 @@ export function AddTransactionForm({
         <Popover>
           <PopoverTrigger asChild>
             <Button
+              type="button"
               variant="outline"
               className={cn(
                 "w-full pl-3 text-left font-normal",
@@ -242,7 +236,7 @@ export function AddTransactionForm({
             <Calendar
               mode="single"
               selected={date}
-              onSelect={(date) => setValue("date", date)}
+              onSelect={(selectedDate) => setDate(selectedDate)}
               disabled={(date) =>
                 date > new Date() || date < new Date("1900-01-01")
               }
@@ -251,16 +245,20 @@ export function AddTransactionForm({
           </PopoverContent>
         </Popover>
         {errors.date && (
-          <p className="text-sm text-red-500">{errors.date.message}</p>
+          <p className="text-sm text-red-500">{errors.date}</p>
         )}
       </div>
 
       {/* Description */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Description</label>
-        <Input placeholder="Enter description" {...register("description")} />
+        <Input
+          placeholder="Enter description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
         {errors.description && (
-          <p className="text-sm text-red-500">{errors.description.message}</p>
+          <p className="text-sm text-red-500">{errors.description}</p>
         )}
       </div>
 
@@ -272,34 +270,34 @@ export function AddTransactionForm({
             Set up a recurring schedule for this transaction
           </div>
         </div>
-        <Switch
-          checked={isRecurring}
-          onCheckedChange={(checked) => setValue("isRecurring", checked)}
-        />
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            className="sr-only peer"
+            checked={isRecurring}
+            onChange={(e) => setIsRecurring(e.target.checked)}
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+        </label>
       </div>
 
       {/* Recurring Interval */}
       {isRecurring && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Recurring Interval</label>
-          <Select
-            onValueChange={(value) => setValue("recurringInterval", value)}
-            defaultValue={getValues("recurringInterval")}
+          <select
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            value={recurringInterval}
+            onChange={(e) => setRecurringInterval(e.target.value)}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select interval" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="DAILY">Daily</SelectItem>
-              <SelectItem value="WEEKLY">Weekly</SelectItem>
-              <SelectItem value="MONTHLY">Monthly</SelectItem>
-              <SelectItem value="YEARLY">Yearly</SelectItem>
-            </SelectContent>
-          </Select>
+            <option value="">Select interval</option>
+            <option value="DAILY">Daily</option>
+            <option value="WEEKLY">Weekly</option>
+            <option value="MONTHLY">Monthly</option>
+            <option value="YEARLY">Yearly</option>
+          </select>
           {errors.recurringInterval && (
-            <p className="text-sm text-red-500">
-              {errors.recurringInterval.message}
-            </p>
+            <p className="text-sm text-red-500">{errors.recurringInterval}</p>
           )}
         </div>
       )}

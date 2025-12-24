@@ -29,6 +29,7 @@ export default function Header() {
         </Link>
 
         {/* Center links (only when logged out) */}
+        <div suppressHydrationWarning>
         <SignedOut>
           <div className="hidden md:flex items-center space-x-8">
             <Link href="#features" className="text-gray-600 hover:text-indigo-600">
@@ -76,6 +77,7 @@ export default function Header() {
               }}
             />
           </SignedIn>
+        </div>
         </div>
       </nav>
     </header>
