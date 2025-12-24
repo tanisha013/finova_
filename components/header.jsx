@@ -53,7 +53,6 @@ export default function Header() {
 
         {/* Right actions */}
         <div className="flex items-center gap-4">
-          
 
           <SignedIn>
             <Link href="/dashboard">
