@@ -79,9 +79,7 @@ export function Footer() {
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           
           <p className="text-gray-400 flex items-center gap-2">
-            © 2025 Finova. Made with 
-            <Heart className="w-4 h-4 text-red-500 fill-red-500" /> 
-            for better finances.
+            © 2025 Finova.
           </p>
 
           <div className="flex gap-6">
