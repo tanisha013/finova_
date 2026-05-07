@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "./ui/button";
 import { PenBox, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
@@ -29,31 +27,25 @@ export default function Header() {
         </Link>
 
         {/* Center links (only when logged out) */}
-        <div></div>
+        <div suppressHydrationWarning>
         <SignedOut>
           <div className="hidden md:flex items-center space-x-8">
             <Link href="#features" className="text-gray-600 hover:text-indigo-600">
               Features
             </Link>
-            <Link href="#testimonials" className="text-gray-600 hover:text-indigo-600">
-              Testimonials
-            </Link>
             <Link href="#about" className="text-gray-600 hover:text-indigo-600">
               About
             </Link>
-          </div>
-        </SignedOut>
-
-        {/* Right actions */}
-        <div className="flex items-center gap-4">
-          <SignedOut>
             <SignInButton forceRedirectUrl="/dashboard">
               <Button className="bg-gradient-to-r from-indigo-600 to-teal-600 text-white shadow-lg">
                 Login
               </Button>
             </SignInButton>
-          </SignedOut>
+          </div>
+        </SignedOut>
 
+        {/* Right actions */}
+        <div className="flex items-center gap-4">
           <SignedIn>
             <Link href="/dashboard">
               <Button variant="outline" className="flex items-center gap-2">
@@ -77,6 +69,7 @@ export default function Header() {
               }}
             />
           </SignedIn>
+        </div>
         </div>
       </nav>
     </header>

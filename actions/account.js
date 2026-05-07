@@ -14,7 +14,7 @@ const serializeDecimal = (obj) => {
   }
   return serialized;
 };
-
+ 
 
 export async function updateDefaultAccount(accountId) {
   try {

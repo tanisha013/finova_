@@ -8,7 +8,6 @@ import {
   Sparkles,
   ReceiptIndianRupee
 } from 'lucide-react';
-import { motion } from 'motion/react';
 
 export function Features() {
   const features = [
@@ -61,27 +60,14 @@ export function Features() {
       id="features"
       className="py-20 bg-white relative overflow-hidden"
     >
-      {/* Background blobs */}
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        className="absolute top-20 right-10 w-64 h-64 bg-indigo-200 rounded-full blur-3xl opacity-20"
-      />
-      <motion.div
-        animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
-        transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-        className="absolute bottom-20 left-10 w-64 h-64 bg-teal-200 rounded-full blur-3xl opacity-20"
-      />
+      {/* Static background blobs */}
+      <div className="absolute top-20 right-10 w-64 h-64 bg-indigo-200 rounded-full blur-3xl opacity-20" />
+      <div className="absolute bottom-20 left-10 w-64 h-64 bg-teal-200 rounded-full blur-3xl opacity-20" />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative">
+        
         {/* Section header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center max-w-3xl mx-auto mb-16"
-        >
+        <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full inline-block mb-4">
             Features
           </span>
@@ -91,11 +77,7 @@ export function Features() {
           <h2 className="text-gray-500 mb-4 text-3xl font-bold">
             No more guesswork or missed insights <br/> —manage your finances the smart way.
           </h2>
-          {/* <p className="text-gray-600 text-xl">
-            Powerful tools designed to give you complete control over your
-            finances.
-          </p> */}
-        </motion.div>
+        </div>
 
         {/* Feature cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -103,29 +85,18 @@ export function Features() {
             const Icon = feature.icon;
 
             return (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{ y: -10, scale: 1.03 }}
-                className="group bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all relative overflow-hidden"
+                className="group bg-white rounded-2xl p-8 border border-gray-100 shadow-sm relative overflow-hidden"
               >
-                {/* Hover gradient */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 0.1 }}
-                  className={`absolute inset-0 bg-gradient-to-br ${feature.gradient}`}
-                />
+                {/* Static gradient background */}
+                <div className={`absolute inset-0 opacity-5 bg-gradient-to-br ${feature.gradient}`} />
 
-                <motion.div
-                  whileHover={{ rotate: 360, scale: 1.2 }}
-                  transition={{ duration: 0.6 }}
+                <div
                   className={`w-14 h-14 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center mb-5 relative z-10`}
                 >
                   <Icon className="w-7 h-7 text-white" />
-                </motion.div>
+                </div>
 
                 <h3 className="text-gray-900 mb-3 relative z-10">
                   {feature.title}
@@ -133,7 +104,7 @@ export function Features() {
                 <p className="text-gray-600 relative z-10">
                   {feature.description}
                 </p>
-              </motion.div>
+              </div>
             );
           })}
         </div>

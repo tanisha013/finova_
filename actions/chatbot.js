@@ -137,7 +137,7 @@ async function getUserFinancialContext() {
  */
 function buildSystemPrompt(context) {
   const budgetInfo = context.budget
-    ? `Monthly Budget: $${context.budget.toFixed(2)}`
+    ? `Monthly Budget: ₹${context.budget.toFixed(2)}`
     : "No budget set";
 
   const totalMonthlySpent = context.spendingByCategory.reduce(
@@ -146,16 +146,16 @@ function buildSystemPrompt(context) {
   );
 
   const budgetStatus = context.budget
-    ? `Budget Used: $${totalMonthlySpent.toFixed(2)} / $${context.budget.toFixed(2)} (${((totalMonthlySpent / context.budget) * 100).toFixed(0)}%)`
+    ? `Budget Used: ₹${totalMonthlySpent.toFixed(2)} / ₹${context.budget.toFixed(2)} (${((totalMonthlySpent / context.budget) * 100).toFixed(0)}%)`
     : "";
 
   return `You are an AI financial advisor assistant for a personal finance platform. Your role is to help users understand their finances, provide insights, and answer questions about their spending, income, and budgets.
 
 CURRENT USER FINANCIAL DATA:
-- Total Balance (All Accounts): $${context.totalBalance.toFixed(2)}
-- Income (Last 30 days): $${context.totalIncome.toFixed(2)}
-- Expenses (Last 30 days): $${context.totalExpenses.toFixed(2)}
-- Net (Last 30 days): $${(context.totalIncome - context.totalExpenses).toFixed(2)}
+- Total Balance (All Accounts): ₹${context.totalBalance.toFixed(2)}
+- Income (Last 30 days): ₹${context.totalIncome.toFixed(2)}
+- Expenses (Last 30 days): ₹${context.totalExpenses.toFixed(2)}
+- Net (Last 30 days): ₹${(context.totalIncome - context.totalExpenses).toFixed(2)}
 - ${budgetInfo}
 ${budgetStatus ? `- ${budgetStatus}` : ""}
 
@@ -163,7 +163,7 @@ ACCOUNTS:
 ${context.accounts
   .map(
     (acc) =>
-      `- ${acc.name} (${acc.type}${acc.isDefault ? ", Default" : ""}): $${Number(acc.balance).toFixed(2)}`
+      `- ${acc.name} (${acc.type}${acc.isDefault ? ", Default" : ""}): ₹${Number(acc.balance).toFixed(2)}`
   )
   .join("\n")}
 
@@ -172,7 +172,7 @@ ${
   context.spendingByCategory.length > 0
     ? context.spendingByCategory
         .sort((a, b) => b.amount - a.amount)
-        .map((cat) => `- ${cat.category}: $${cat.amount.toFixed(2)}`)
+        .map((cat) => `- ${cat.category}: ₹${cat.amount.toFixed(2)}`)
         .join("\n")
     : "No expenses recorded this month"
 }
@@ -181,7 +181,7 @@ RECENT TRANSACTIONS (Last 20):
 ${context.recentTransactions
   .map(
     (t) =>
-      `- ${t.date.toLocaleDateString()}: ${t.description || "No description"} - $${Number(t.amount).toFixed(2)} (${t.type}${t.category ? `, ${t.category}` : ""})`
+      `- ${t.date.toLocaleDateString()}: ${t.description || "No description"} - ₹${Number(t.amount).toFixed(2)} (${t.type}${t.category ? `, ${t.category}` : ""})`
   )
   .join("\n")}
 
@@ -433,7 +433,7 @@ export async function getQuickInsights() {
     } else {
       const savings = context.totalIncome - context.totalExpenses;
       insights.push(
-        `✅ Great! You've saved $${savings.toFixed(2)} this month.`
+        `✅ Great! You've saved ₹${savings.toFixed(2)} this month.`
       );
     }
 
@@ -450,7 +450,7 @@ export async function getQuickInsights() {
         (a, b) => b.amount - a.amount
       )[0];
       insights.push(
-        `📊 Your biggest expense this month: ${topCategory.category} ($${topCategory.amount.toFixed(2)})`
+        `📊 Your biggest expense this month: ${topCategory.category} (₹${topCategory.amount.toFixed(2)})`
       );
     }
 
