@@ -28,7 +28,7 @@ export default function Header() {
 
         {/* Center links (only when logged out) */}
         <SignedOut>
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="ml-auto hidden md:flex items-center space-x-8">
             <Link href="#features" className="text-gray-600 hover:text-indigo-600">
               Features
             </Link>
