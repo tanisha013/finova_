@@ -262,6 +262,230 @@ export async function scanReceipt(file) {
   }
 }
 
+export async function importBankStatement(file, accountId) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+    if (!user) throw new Error("User not found");
+
+    const account = await db.account.findUnique({
+      where: { id: accountId, userId: user.id },
+    });
+    if (!account) throw new Error("Account not found");
+
+    const parsedTransactions = await parseBankStatementWithGemini(file);
+    const validTransactions = parsedTransactions
+      .map(normalizeImportedTransaction)
+      .filter((transaction) => transaction && transaction.amount > 0);
+
+    if (validTransactions.length === 0) {
+      throw new Error("No valid transactions were found in the statement.");
+    }
+
+    const balanceChange = validTransactions.reduce((sum, transaction) => {
+      return sum + (transaction.type === "EXPENSE" ? -transaction.amount : transaction.amount);
+    }, 0);
+
+    await db.$transaction(async (tx) => {
+      await tx.transaction.createMany({
+        data: validTransactions.map((transaction) => ({
+          ...transaction,
+          userId: user.id,
+          accountId: account.id,
+          nextRecurringDate:
+            transaction.isRecurring && transaction.recurringInterval
+              ? calculateNextRecurringDate(transaction.date, transaction.recurringInterval)
+              : null,
+        })),
+      });
+
+      await tx.account.update({
+        where: { id: account.id },
+        data: {
+          balance: {
+            increment: balanceChange,
+          },
+        },
+      });
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/account/${account.id}`);
+
+    return { success: true, createdCount: validTransactions.length };
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function parseBankStatementWithGemini(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const mimeType = file.type || "";
+  const isCsv =
+    mimeType === "text/csv" ||
+    mimeType === "application/csv" ||
+    mimeType === "application/vnd.ms-excel" ||
+    file.name?.toLowerCase().endsWith(".csv");
+
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  let result;
+
+  const runGenerate = async () => {
+    if (isCsv) {
+      const csvString = Buffer.from(arrayBuffer).toString("utf-8");
+      const prompt = `
+        You are a bank statement parser. Convert the CSV text below into a JSON array of transactions.
+        Each transaction should include:
+        - date: ISO date string
+        - description: brief description
+        - amount: numeric amount
+        - type: either EXPENSE or INCOME
+        - category: one of housing, transportation, groceries, utilities, entertainment, food, shopping, healthcare, education, personal, travel, insurance, gifts, bills, other-expense
+        - isRecurring: true or false
+        - recurringInterval: DAILY, WEEKLY, MONTHLY, YEARLY or null
+
+        Only respond with valid JSON. Do not include extra text.
+
+        CSV:
+        ${csvString}
+      `;
+      return await model.generateContent([prompt]);
+    }
+
+    const base64String = Buffer.from(arrayBuffer).toString("base64");
+    const prompt = `
+      You are a bank statement parser. Analyze the attached statement file and extract the transactions.
+      Each transaction should include:
+      - date: ISO date string
+      - description: brief description
+      - amount: numeric amount
+      - type: either EXPENSE or INCOME
+      - category: one of housing, transportation, groceries, utilities, entertainment, food, shopping, healthcare, education, personal, travel, insurance, gifts, bills, other-expense
+      - isRecurring: true or false
+      - recurringInterval: DAILY, WEEKLY, MONTHLY, YEARLY or null
+
+      Only respond with valid JSON. Do not include extra text.
+    `;
+    return await model.generateContent([
+      {
+        inlineData: {
+          data: base64String,
+          mimeType: mimeType || "application/pdf",
+        },
+      },
+      prompt,
+    ]);
+  };
+
+  try {
+    result = await retryGeminiRequest(runGenerate);
+  } catch (error) {
+    console.error("Gemini request failed:", error);
+    throw new Error(
+      error.message?.includes("Service Unavailable")
+        ? "Gemini is temporarily unavailable. Please try again later."
+        : "Unable to parse the statement results from Gemini."
+    );
+  }
+
+  const response = await result.response;
+  const text = await response.text();
+  const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+
+  try {
+    const parsed = JSON.parse(cleanedText);
+    if (!Array.isArray(parsed)) {
+      throw new Error("Parsed result is not an array of transactions.");
+    }
+    return parsed;
+  } catch (parseError) {
+    console.error("Error parsing bank statement response:", parseError, cleanedText);
+    throw new Error("Unable to parse the statement results from Gemini.");
+  }
+}
+
+async function retryGeminiRequest(fn) {
+  const MAX_RETRIES = 3;
+  const BASE_DELAY_MS = 1200;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      const message = String(error?.message || "").toLowerCase();
+      const statusCode = error?.status || error?.code || "";
+      const isTemporary =
+        message.includes("503") ||
+        message.includes("service unavailable") ||
+        message.includes("high demand") ||
+        statusCode === 503;
+
+      if (attempt === MAX_RETRIES || !isTemporary) {
+        throw error;
+      }
+
+      const delayMs = BASE_DELAY_MS * attempt;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw new Error("Gemini request failed after retrying.");
+}
+
+function normalizeImportedTransaction(transaction) {
+  if (!transaction) {
+    return null;
+  }
+
+  const rawAmount = Number(transaction.amount);
+  if (Number.isNaN(rawAmount) || rawAmount === 0) {
+    return null;
+  }
+
+  const amount = Math.abs(rawAmount);
+  const typeRaw = String(transaction.type || "").trim().toUpperCase();
+  const type =
+    typeRaw === "EXPENSE" || typeRaw === "INCOME"
+      ? typeRaw
+      : rawAmount < 0
+      ? "EXPENSE"
+      : "INCOME";
+
+  const categoryRaw = String(transaction.category || "other-expense").trim().toLowerCase();
+  const category = categoryRaw || "other-expense";
+
+  const recurringIntervalRaw = String(transaction.recurringInterval || "")
+    .trim()
+    .toUpperCase();
+  const recurringInterval =
+    ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].includes(recurringIntervalRaw)
+      ? recurringIntervalRaw
+      : null;
+
+  const dateValue = new Date(transaction.date);
+  const date = Number.isNaN(dateValue.getTime())
+    ? new Date().toISOString()
+    : dateValue.toISOString();
+
+  return {
+    date,
+    description:
+      String(transaction.description || transaction.merchantName || "Imported transaction").trim(),
+    amount,
+    type,
+    category,
+    isRecurring:
+      transaction.isRecurring === true ||
+      transaction.isRecurring === "true" ||
+      String(transaction.isRecurring).toLowerCase() === "yes",
+    recurringInterval,
+  };
+}
+
 // Helper function to calculate next recurring date
 function calculateNextRecurringDate(startDate, interval) {
   const date = new Date(startDate);

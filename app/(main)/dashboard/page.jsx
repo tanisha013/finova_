@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getUserAccounts } from "@/actions/dashboard";
 import { getDashboardData } from "@/actions/dashboard";
 import { getCurrentBudget } from "@/actions/budget";
@@ -5,6 +6,7 @@ import { AccountCard } from "./_components/account-card";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
 import { BudgetProgress } from "./_components/budget-progress";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { DashboardOverview } from "./_components/transaction-overview";
 
@@ -24,6 +26,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      <div className="flex justify-end">
+        <Button asChild>
+          <Link href="/transaction/import">Import Bank Statement</Link>
+        </Button>
+      </div>
+
       {/* Budget Progress */}
       <BudgetProgress
         initialBudget={budgetData?.budget}

@@ -12,8 +12,8 @@ import Image from "next/image";
 export default function Header() {
   return (
     <header className="fixed top-0 w-full bg-white backdrop-blur-md z-50 border-b">
-      <nav className="container mx-auto px-3 py-4 flex items-center w-full">
-        
+      <nav className="container mx-auto px-3 py-4 flex items-center justify-between">
+
         {/* Logo */}
         <Link href="/">
           <Image
@@ -26,9 +26,9 @@ export default function Header() {
           />
         </Link>
 
-        {/* Center links (only when logged out) */}
-        <SignedOut>
-          <div className="ml-auto hidden md:flex items-center space-x-8">
+        {/* Right side */}
+        <div className="flex items-center gap-4">
+          <SignedOut>
             <Link href="#features" className="text-gray-600 hover:text-indigo-600">
               Features
             </Link>
@@ -40,11 +40,8 @@ export default function Header() {
                 Login
               </Button>
             </SignInButton>
-          </div>
-        </SignedOut>
+          </SignedOut>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-4">
           <SignedIn>
             <Link href="/dashboard">
               <Button variant="outline" className="flex items-center gap-2">
@@ -69,6 +66,7 @@ export default function Header() {
             />
           </SignedIn>
         </div>
+
       </nav>
     </header>
   );
