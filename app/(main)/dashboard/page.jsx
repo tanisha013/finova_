@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { getUserAccounts } from "@/actions/dashboard";
-import { getDashboardData } from "@/actions/dashboard";
+import { getUserAccounts, getDashboardData, getFinancialHealthScore, generateFinancialHealthRecommendations } from "@/actions/dashboard";
 import { getCurrentBudget } from "@/actions/budget";
 import { AccountCard } from "./_components/account-card";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
@@ -9,12 +8,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { DashboardOverview } from "./_components/transaction-overview";
+import { FinancialHealthCard } from "./_components/financial-health-card";
 
 export default async function DashboardPage() {
-  const [accounts, transactions] = await Promise.all([
+  const [accounts, transactions, healthScore] = await Promise.all([
     getUserAccounts(),
     getDashboardData(),
+    getFinancialHealthScore(),
   ]);
+
+  const healthRecommendations = await generateFinancialHealthRecommendations(
+    healthScore
+  );
 
   const defaultAccount = accounts?.find((account) => account.isDefault);
 
@@ -36,6 +41,11 @@ export default async function DashboardPage() {
       <BudgetProgress
         initialBudget={budgetData?.budget}
         currentExpenses={budgetData?.currentExpenses || 0}
+      />
+
+      <FinancialHealthCard
+        healthScore={healthScore}
+        recommendations={healthRecommendations}
       />
 
       {/* Dashboard Overview */}
