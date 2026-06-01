@@ -48,7 +48,7 @@ export async function AccountCashflowCard({ accountId }) {
       <CardHeader className="gap-3">
         <div>
           <CardTitle>AI Cash Flow Prediction</CardTitle>
-          <CardDescription>Forecasts are based on the selected account's recent transactions.</CardDescription>
+          <CardDescription>Forecasts are based on the selected account&apos;s recent transactions.</CardDescription>
         </div>
         <span
           className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium ${badgeClasses}`}
