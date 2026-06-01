@@ -3,7 +3,7 @@
 import { db } from "@/lib/prisma";
 import { subDays } from "date-fns";
 
-const ACCOUNT_ID = "8dc8fe2f-a58e-44d4-82e0-a71c19e999a9";
+const ACCOUNT_ID = "bf792930-71e0-42c9-ab42-b8028799da8b";
 const USER_ID = "2cfc889e-2192-4aec-b17d-8d46148af247";
 
 // Categories with their typical amount ranges
@@ -43,6 +43,40 @@ function getRandomCategory(type) {
 
 export async function seedTransactions() {
   try {
+    let user = await db.user.findUnique({
+      where: { id: USER_ID },
+    });
+
+    if (!user) {
+      user = await db.user.create({
+        data: {
+          id: USER_ID,
+          clerkUserId: `seed-${USER_ID}`,
+          email: `seed-${USER_ID}@example.com`,
+        },
+      });
+    }
+
+    let account = await db.account.findUnique({
+      where: { id: ACCOUNT_ID },
+    });
+
+    if (!account) {
+      account = await db.account.create({
+        data: {
+          id: ACCOUNT_ID,
+          name: "Seed Account",
+          type: "CURRENT",
+          balance: 0,
+          userId: user.id,
+        },
+      });
+    }
+
+    if (account.userId !== user.id) {
+      throw new Error(`Seed account ${ACCOUNT_ID} does not belong to user ${USER_ID}`);
+    }
+
     // Generate 90 days of transactions
     const transactions = [];
     let totalBalance = 0;
