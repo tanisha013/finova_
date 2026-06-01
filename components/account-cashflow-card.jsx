@@ -30,7 +30,7 @@ export async function AccountCashflowCard({ accountId }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>AI Cash Flow Prediction</CardTitle>
+          <CardTitle>Cash Flow Prediction</CardTitle>
           <CardDescription>Unable to load prediction data at this time.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -47,7 +47,9 @@ export async function AccountCashflowCard({ accountId }) {
     <Card>
       <CardHeader className="gap-3">
         <div>
-          <CardTitle>AI Cash Flow Prediction</CardTitle>
+          <CardTitle className="text-base font-medium tracking-tight text-slate-900">
+            AI Cash Flow Prediction
+          </CardTitle>
           <CardDescription>Forecasts are based on the selected account&apos;s recent transactions.</CardDescription>
         </div>
         <span
