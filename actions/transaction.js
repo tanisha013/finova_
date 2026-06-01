@@ -278,21 +278,70 @@ export async function importBankStatement(file, accountId) {
     if (!account) throw new Error("Account not found");
 
     const parsedTransactions = await parseBankStatementWithGemini(file);
-    const validTransactions = parsedTransactions
+    const normalizedTransactions = parsedTransactions
       .map(normalizeImportedTransaction)
       .filter((transaction) => transaction && transaction.amount > 0);
 
-    if (validTransactions.length === 0) {
+    if (normalizedTransactions.length === 0) {
       throw new Error("No valid transactions were found in the statement.");
     }
 
-    const balanceChange = validTransactions.reduce((sum, transaction) => {
+    const uniqueTransactions = [];
+    const seenKeys = new Set();
+
+    for (const transaction of normalizedTransactions) {
+      const key = `${transaction.date}|${transaction.amount}|${transaction.type}|${transaction.description}`;
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        uniqueTransactions.push(transaction);
+      }
+    }
+
+    if (uniqueTransactions.length === 0) {
+      throw new Error("No new transactions were found after removing duplicates.");
+    }
+
+    const existingTransactions = await db.transaction.findMany({
+      where: {
+        userId: user.id,
+        accountId: account.id,
+        OR: uniqueTransactions.map((transaction) => ({
+          date: new Date(transaction.date),
+          amount: transaction.amount,
+          type: transaction.type,
+          description: transaction.description,
+        })),
+      },
+      select: {
+        date: true,
+        amount: true,
+        type: true,
+        description: true,
+      },
+    });
+
+    const existingKeys = new Set(
+      existingTransactions.map((transaction) =>
+        `${transaction.date.toISOString()}|${transaction.amount}|${transaction.type}|${transaction.description}`
+      )
+    );
+
+    const finalTransactions = uniqueTransactions.filter((transaction) => {
+      const key = `${transaction.date}|${transaction.amount}|${transaction.type}|${transaction.description}`;
+      return !existingKeys.has(key);
+    });
+
+    if (finalTransactions.length === 0) {
+      throw new Error("All parsed transactions already exist in this account.");
+    }
+
+    const balanceChange = finalTransactions.reduce((sum, transaction) => {
       return sum + (transaction.type === "EXPENSE" ? -transaction.amount : transaction.amount);
     }, 0);
 
     await db.$transaction(async (tx) => {
       await tx.transaction.createMany({
-        data: validTransactions.map((transaction) => ({
+        data: finalTransactions.map((transaction) => ({
           ...transaction,
           userId: user.id,
           accountId: account.id,
@@ -316,7 +365,7 @@ export async function importBankStatement(file, accountId) {
     revalidatePath("/dashboard");
     revalidatePath(`/account/${account.id}`);
 
-    return { success: true, createdCount: validTransactions.length };
+    return { success: true, createdCount: finalTransactions.length };
   } catch (error) {
     throw new Error(error.message);
   }

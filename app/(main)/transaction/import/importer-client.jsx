@@ -16,10 +16,14 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function ImportBankStatementClient({ accounts }) {
+export default function ImportBankStatementClient({ accounts, defaultAccountId }) {
   const router = useRouter();
   const [file, setFile] = useState(null);
-  const [accountId, setAccountId] = useState(accounts?.[0]?.id || "");
+  const [accountId, setAccountId] = useState(
+    accounts?.find((account) => account.id === defaultAccountId)?.id ||
+      accounts?.[0]?.id ||
+      ""
+  );
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event) => {

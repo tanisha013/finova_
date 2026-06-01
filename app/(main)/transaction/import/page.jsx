@@ -1,8 +1,9 @@
 import { getUserAccounts } from "@/actions/dashboard";
 import ImportBankStatementClient from "./importer-client";
 
-export default async function BankStatementImportPage() {
+export default async function BankStatementImportPage({ searchParams }) {
   const accounts = await getUserAccounts();
+  const accountId = typeof searchParams?.accountId === "string" ? searchParams.accountId : undefined;
 
   return (
     <div className="max-w-3xl mx-auto px-5 py-8">
@@ -17,7 +18,7 @@ export default async function BankStatementImportPage() {
         </div>
       </div>
 
-      <ImportBankStatementClient accounts={accounts} />
+      <ImportBankStatementClient accounts={accounts} defaultAccountId={accountId} />
     </div>
   );
 }

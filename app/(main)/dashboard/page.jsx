@@ -31,12 +31,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
-        <Button asChild>
-          <Link href="/transaction/import">Import Bank Statement</Link>
-        </Button>
-      </div>
-
       {/* Budget Progress */}
       <BudgetProgress
         initialBudget={budgetData?.budget}
